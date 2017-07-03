@@ -69,7 +69,7 @@ class App extends React.Component {
             <button type='submit'>Search</button>
           </form>
         </div>
-        <ListWithLoadingWithPaginated
+        <ListWithLoadingWithInfinite
           list={this.state.hits}
           isLoading={this.state.isLoading}
           page={this.state.page}
@@ -80,7 +80,8 @@ class App extends React.Component {
   }
 }
 
-const List = ({ list, page, isLoading ,onPaginatedSearch }) => (
+// functional stateless component
+const List = ({ list }) => (
   <div>
     <div className='list'>
       {list.map(item => <div className='list-row' key={item.objectID}>
@@ -116,8 +117,35 @@ const withPaginated = (Component) => (props) =>
     </div>
   </div>
 
-const ListWithLoadingWithPaginated = compose(
-  withPaginated,
+const withInfiniteScroll = (Component) => 
+  class WithInfiniteScroll extends React.Component {
+    componentDidMount() {
+      window.addEventListener('scroll', this.onScroll, false);
+    }
+
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this.onScroll, false);
+  }
+
+  onScroll = () => {
+    if(
+      (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 500) &&
+      this.props.list.length &&
+      !this.props.isLoading
+    ) {
+      this.props.onPaginatedSearch();
+    }
+  }
+
+  render() {
+    return <Component {...this.props} />;
+  }
+
+}
+
+const ListWithLoadingWithInfinite = compose(
+  // withPaginated,
+  withInfiniteScroll,
   withLoading
 )(List);
 
